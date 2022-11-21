@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using Total_Comander.WorkWithDirAndFiles;
 
 namespace Total_Comander
 {
@@ -18,7 +19,6 @@ namespace Total_Comander
 
         private string? path_current_file_dtg1;
         private string? path_current_file_dtg2;
-
 
         public Form1()
         {
@@ -86,7 +86,8 @@ namespace Total_Comander
         }
         #endregion
 
-        #region DataGrid Events
+
+        #region DataGridView Double Click
         private void dataGridView1_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -108,12 +109,13 @@ namespace Total_Comander
                 переименоватьToolStripMenuItem1.Enabled = false;
             }
         }
-
+        #endregion
+        #region DataGridView Mouse Click
         private void dataGridView1_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
-                ClickCells(dataGridView1, e, path_dtg1, ref path_current_file_dtg1);
+                Forms_Click.ClickCells(dataGridView1, e, path_dtg1, ref path_current_file_dtg1);
                 button3.Enabled = true;
                 button4.Enabled = true;
                 переименоватьToolStripMenuItem.Enabled = true;
@@ -124,18 +126,19 @@ namespace Total_Comander
         {
             if (e.Button == MouseButtons.Left)
             {
-                ClickCells(dataGridView2, e, path_dtg2, ref path_current_file_dtg2);
+                Forms_Click.ClickCells(dataGridView2, e, path_dtg2, ref path_current_file_dtg2);
                 button5.Enabled = true;
                 button6.Enabled = true;
                 переименоватьToolStripMenuItem1.Enabled = true;
             }
         }
-
+        #endregion
+        #region DataGridView Key Down
         private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Delete)
             {
-                DeleteFiles(e, dataGridView1, ref path_current_file_dtg1);
+                Delete.DeleteFrom(e, dataGridView1, ref path_current_file_dtg1);
                 button3.Enabled = false;
                 button4.Enabled = false;
                 переименоватьToolStripMenuItem.Enabled = false;
@@ -146,22 +149,63 @@ namespace Total_Comander
         {
             if (e.KeyCode == Keys.Delete)
             {
-                DeleteFiles(e, dataGridView2, ref path_current_file_dtg2);
+                Delete.DeleteFrom(e, dataGridView2, ref path_current_file_dtg2);
                 button5.Enabled = false;
                 button6.Enabled = false;
                 переименоватьToolStripMenuItem1.Enabled = false;
             }
         }
-
         #endregion
-        #region Buttons
+
+
+        #region Buttons Copy
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (path_current_file_dtg1 != "" && path_dtg2 != "" && path_current_file_dtg1 != null && path_dtg2 != null)
+            {
+                if (dataGridView1.CurrentRow.Cells[3].Value.ToString() == "<dir>")
+                {
+                    int lastIndex = path_current_file_dtg1.LastIndexOf('\\');
+                    string? dirname = path_current_file_dtg1.Substring(lastIndex, path_current_file_dtg1.Length - lastIndex);
+
+                    Copy.CopyDirectory(path_current_file_dtg1, path_dtg2 + "\\" + dirname, true);
+                    ViewDirectories(path_dtg2, dataGridView2);
+                }
+                else
+                {
+                    Copy.CopyFile(path_current_file_dtg1, path_dtg2);
+                    ViewDirectories(path_dtg2, dataGridView2);
+                }
+            }
+        }
+        private void button6_Click(object sender, EventArgs e)
+        {
+            if (path_current_file_dtg2 != "" && path_dtg1 != "" && path_current_file_dtg2 != null && path_dtg1 != null)
+            {
+                if (dataGridView2.CurrentRow.Cells[3].Value.ToString() == "<dir>")
+                {
+                    int lastIndex = path_current_file_dtg2.LastIndexOf('\\');
+                    string? dirname = path_current_file_dtg2.Substring(lastIndex, path_current_file_dtg2.Length - lastIndex);
+
+                    Copy.CopyDirectory(path_current_file_dtg2, path_dtg1 + "\\" + dirname, true);
+                    ViewDirectories(path_dtg1, dataGridView1);
+                }
+                else
+                {
+                    Copy.CopyFile(path_current_file_dtg2, path_dtg1);
+                    ViewDirectories(path_dtg1, dataGridView1);
+                }
+            }
+        }
+        #endregion
+        #region Buttons Back
         private void button1_Click(object sender, EventArgs e)
         {
             ButtonsBackClick(comboBox1, ref path_dtg1, dataGridView1);
             button3.Enabled = false;
             button4.Enabled = false;
             переименоватьToolStripMenuItem.Enabled = false;
-            
+
         }
         private void button2_Click(object sender, EventArgs e)
         {
@@ -170,26 +214,8 @@ namespace Total_Comander
             button6.Enabled = false;
             переименоватьToolStripMenuItem1.Enabled = false;
         }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            if (path_current_file_dtg1 != "" && path_dtg2 != "" && path_current_file_dtg1 != null)
-            {
-                if (dataGridView1.CurrentRow.Cells[3].Value.ToString() == "<dir>")
-                {
-                    int lastIndex = path_current_file_dtg1.LastIndexOf('\\');
-                    string? dirname = path_current_file_dtg1.Substring(lastIndex, path_current_file_dtg1.Length - lastIndex);
-
-                    CopyDirectory(path_current_file_dtg1, path_dtg2 + "\\" + dirname, true);
-                    ViewDirectories(path_dtg2, dataGridView2);
-                }
-                else
-                {
-                    CopyFile(path_current_file_dtg1, path_dtg2);
-                    ViewDirectories(path_dtg2, dataGridView2);
-                }
-            }
-        }
+        #endregion
+        #region Buttons MoveTo
         private void button4_Click(object sender, EventArgs e)
         {
             if (path_current_file_dtg1 != "" && path_dtg2 != "" && path_current_file_dtg1 != null)
@@ -197,16 +223,16 @@ namespace Total_Comander
                 if (dataGridView1.CurrentRow.Cells[3].Value.ToString() == "<dir>")
                 {
 
-                    MoveToDirectory(path_current_file_dtg1, path_dtg2);
+                    MoveTo.MoveToDirectory(path_current_file_dtg1, path_dtg2);
                     ViewDirectories(path_dtg1, dataGridView1);
                     ViewDirectories(path_dtg2, dataGridView2);
                 }
                 else
                 {
-                    MoveToFile(path_current_file_dtg1, path_dtg2);
+                    MoveTo.MoveToFile(path_current_file_dtg1, path_dtg2);
                     ViewDirectories(path_dtg1, dataGridView1);
                     ViewDirectories(path_dtg2, dataGridView2);
-                    
+
                 }
                 button3.Enabled = false;
                 button4.Enabled = false;
@@ -223,13 +249,13 @@ namespace Total_Comander
                 if (dataGridView2.CurrentRow.Cells[3].Value.ToString() == "<dir>")
                 {
 
-                    MoveToDirectory(path_current_file_dtg2, path_dtg1);
+                    MoveTo.MoveToDirectory(path_current_file_dtg2, path_dtg1);
                     ViewDirectories(path_dtg1, dataGridView1);
                     ViewDirectories(path_dtg2, dataGridView2);
                 }
                 else
                 {
-                    MoveToFile(path_current_file_dtg2, path_dtg1);
+                    MoveTo.MoveToFile(path_current_file_dtg2, path_dtg1);
                     ViewDirectories(path_dtg1, dataGridView1);
                     ViewDirectories(path_dtg2, dataGridView2);
                 }
@@ -240,28 +266,9 @@ namespace Total_Comander
                 переименоватьToolStripMenuItem.Enabled = false;
                 переименоватьToolStripMenuItem1.Enabled = false;
             }
-            
-        }
-        private void button6_Click(object sender, EventArgs e)
-        {
-            if (path_current_file_dtg2 != "" && path_dtg1 != "")
-            {
-                if (dataGridView2.CurrentRow.Cells[3].Value.ToString() == "<dir>")
-                {
-                    int lastIndex = path_current_file_dtg2.LastIndexOf('\\');
-                    string? dirname = path_current_file_dtg2.Substring(lastIndex, path_current_file_dtg2.Length - lastIndex);
-
-                    CopyDirectory(path_current_file_dtg2, path_dtg1 + "\\" + dirname, true);
-                    ViewDirectories(path_dtg1, dataGridView1);
-                }
-                else
-                {
-                    CopyFile(path_current_file_dtg2, path_dtg1);
-                    ViewDirectories(path_dtg1, dataGridView1);
-                }
-            }
         }
         #endregion
+
 
         #region ContextMenu
         //DataGridView 1
@@ -322,6 +329,41 @@ namespace Total_Comander
             }
         }
         #endregion
+
+
+        #region DataGridView Properties
+        
+        private void DataGridView1_Properties()
+        {
+            dataGridView1.ColumnCount = 4;
+            dataGridView1.Columns[0].HeaderText = "Name";
+            dataGridView1.Columns[1].HeaderText = "Extension";
+            dataGridView1.Columns[2].HeaderText = "Size";
+            dataGridView1.Columns[3].HeaderText = "Create date";
+
+            dataGridView1.CellBorderStyle = DataGridViewCellBorderStyle.None;
+
+            var imageColumn = new DataGridViewImageColumn();
+            dataGridView1.Columns.Insert(0, imageColumn);
+            dataGridView1.Columns[0].Resizable = DataGridViewTriState.False;
+        }
+        private void DataGridView2_Properties()
+        {
+            dataGridView2.ColumnCount = 4;
+            dataGridView2.Columns[0].HeaderText = "Name";
+            dataGridView2.Columns[1].HeaderText = "Extension";
+            dataGridView2.Columns[2].HeaderText = "Size";
+            dataGridView2.Columns[3].HeaderText = "Create date";
+
+            dataGridView2.CellBorderStyle = DataGridViewCellBorderStyle.None;
+
+            var imageColumn1 = new DataGridViewImageColumn();
+            dataGridView2.Columns.Insert(0, imageColumn1);
+            dataGridView2.Columns[0].Resizable = DataGridViewTriState.False;
+        }
+        #endregion
+
+
         #region Methods
         public void ViewDirectories(string? path, DataGridView dtg)
         {
@@ -412,11 +454,12 @@ namespace Total_Comander
                         path_dtg2 += "\\" + dtg.SelectedRows[0].Cells[1].Value.ToString();
                         ViewDirectories(path_dtg2, dtg);
                     }
-                    
+
                 }
 
             }
         }
+
         private void ButtonsBackClick(ComboBox box, ref string? path, DataGridView dtg)
         {
             if (path != null)
@@ -426,206 +469,6 @@ namespace Total_Comander
                     path = path?.Substring(0, path.LastIndexOf('\\'));
                     ViewDirectories(path, dtg);
                 }
-            }
-        }
-        private void ClickCells(DataGridView dtg, DataGridViewCellMouseEventArgs e, string? path_from_dtg, ref string? path_current_dtg)
-        {
-            if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
-            {
-                string? path = path_from_dtg;
-                if (path != null)
-                {
-                    DirectoryInfo dir = new DirectoryInfo(path);
-                    if (dtg.CurrentRow.Cells[3].Value.ToString() == "<dir>")
-                    {
-                        DirectoryInfo[] directories = dir.GetDirectories();
-
-                        for (int i = 0; i < directories.Length; i++)
-                        {
-                            if (directories[i].Name == dtg.CurrentRow.Cells[1].Value.ToString())
-                            {
-                                path_current_dtg = directories[i].FullName;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        FileInfo[] files = dir.GetFiles();
-
-                        for (int i = 0; i < files.Length; i++)
-                        {
-                            if (files[i].Name == dtg.CurrentRow.Cells[1].Value.ToString())
-                            {
-                                path_current_dtg = files[i].FullName;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private void DeleteFiles(KeyEventArgs e, DataGridView dtg, ref string? fullPath)
-        {
-            e.Handled = true;
-            if (fullPath != "" && fullPath != null)
-            {
-                try
-                {
-                    if (MessageBox.Show($"Вы действительно хотите удалить файл {fullPath}?",
-                        "Удаление записи",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Question,
-                        MessageBoxDefaultButton.Button1) == DialogResult.Yes)
-                    {
-                        if (dtg.CurrentRow.Cells[3].Value.ToString() == "<dir>")
-                        {
-                            DirectoryInfo dir = new DirectoryInfo(fullPath);
-                            if (dir.Exists)
-                            {
-                                dir.Delete(true);
-                                fullPath = "";
-                            }
-                        }
-                        else
-                        {
-                            FileInfo file = new FileInfo(fullPath);
-                            if (file.Exists)
-                            {
-                                file.Delete();
-                                fullPath = "";
-                            }
-                        }
-                        e.Handled = false;
-                    }
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show("А темболее не нужно удалять их :)");
-                }
-            }
-                
-        }
-        private void CopyDirectory(string? sourceDir, string? destinationDir, bool recursive)
-        {
-            if (sourceDir != null && destinationDir != null)
-            {
-                try
-                {
-                    var dir = new DirectoryInfo(sourceDir);
-                    if (!dir.Exists)
-                        throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
-
-                    DirectoryInfo[] dirs = dir.GetDirectories();
-
-                    Directory.CreateDirectory(destinationDir);
-
-                    foreach (FileInfo file in dir.GetFiles())
-                    {
-                        string targetFilePath = Path.Combine(destinationDir, file.Name);
-                        file.CopyTo(targetFilePath, true);
-                    }
-
-                    if (recursive)
-                    {
-                        foreach (DirectoryInfo subDir in dirs)
-                        {
-                            string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
-                            CopyDirectory(subDir.FullName, newDestinationDir, true);
-                        }
-                    }
-                }
-                catch (DirectoryNotFoundException ex)
-                {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-        private void DataGridView1_Properties()
-        {
-            dataGridView1.ColumnCount = 4;
-            dataGridView1.Columns[0].HeaderText = "Name";
-            dataGridView1.Columns[1].HeaderText = "Extension";
-            dataGridView1.Columns[2].HeaderText = "Size";
-            dataGridView1.Columns[3].HeaderText = "Create date";
-
-            dataGridView1.CellBorderStyle = DataGridViewCellBorderStyle.None;
-
-            var imageColumn = new DataGridViewImageColumn();
-            dataGridView1.Columns.Insert(0, imageColumn);
-            dataGridView1.Columns[0].Resizable = DataGridViewTriState.False;
-        }
-        private void DataGridView2_Properties()
-        {
-            dataGridView2.ColumnCount = 4;
-            dataGridView2.Columns[0].HeaderText = "Name";
-            dataGridView2.Columns[1].HeaderText = "Extension";
-            dataGridView2.Columns[2].HeaderText = "Size";
-            dataGridView2.Columns[3].HeaderText = "Create date";
-
-            dataGridView2.CellBorderStyle = DataGridViewCellBorderStyle.None;
-
-            var imageColumn1 = new DataGridViewImageColumn();
-            dataGridView2.Columns.Insert(0, imageColumn1);
-            dataGridView2.Columns[0].Resizable = DataGridViewTriState.False;
-        }
-        private void CopyFile(string? sourceFile, string destinationDir)
-        {
-            try
-            {
-                var file = new FileInfo(sourceFile);
-
-                if (!file.Exists)
-                    throw new FileNotFoundException($"Source file not found: {file.FullName}");
-
-                string pathFile = Path.Combine(destinationDir, file.Name);
-                file.CopyTo(pathFile, true);
-            }
-            catch (FileNotFoundException ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}");    
-            }
-        }
-        private void MoveToDirectory(string? source, string? newPath)
-        {
-            try
-            {
-                if (source != null && source != "")
-                {
-                    DirectoryInfo dir = new DirectoryInfo(source);
-                    string fullPath = Path.Combine(newPath, dir.Name);
-                    if (dir.Exists && !Directory.Exists(fullPath))
-                    {
-                        dir.MoveTo(fullPath);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}");
-            }
-        }
-        private void MoveToFile(string? source, string? newPath)
-        {
-            try
-            {
-                if (source != null && source != "")
-                {
-                    FileInfo file = new FileInfo(source);
-
-                    string fullPath = Path.Combine(newPath, file.Name);
-                    if (file.Exists)
-                    {
-                        file.MoveTo(fullPath, true);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}");
             }
         }
         #endregion
